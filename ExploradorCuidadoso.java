@@ -1,25 +1,40 @@
+import java.util.concurrent.Semaphore;
+
 public class ExploradorCuidadoso extends Explorador implements Runnable {
 
-    public ExploradorCuidadoso(String nome, int prioridade, String tarefa) {
-        super(nome, "Cuidadoso", prioridade, tarefa);
+    public ExploradorCuidadoso(String nome, int nivel, int prioridade, Tarefa tarefa, Semaphore semaforo) {
+        super(nome, "Cuidadoso", nivel, prioridade, tarefa, semaforo);
     }
 
     @Override
-    public void executarTarefa() throws TarefaInvalidaException {
-        // Validação obrigatória da tarefa
-        if (getTarefa() == null || getTarefa().isEmpty()) {
-            throw new TarefaInvalidaException("Tarefa inválida para " + getNome());
+    public void executarTarefa() {
+        System.out.println(getNome() + " iniciou a tarefa: " + getTarefa().getDescricao() + " no terreno [" + getTarefa().getLocal() + "].");
+        System.out.println("Status: Realizando tarefa com cautela!");
+        
+        try {
+            // Exploradores cuidadosos demoram um pouco mais analisando o mapa
+            Thread.sleep(3000); 
+        } catch (InterruptedException e) {
+            System.err.println(getNome() + " foi interrompido.");
         }
-        System.out.println("Explorador: " + getNome() + " | Tipo: Cuidadoso | Status: Mapeando a floresta com cautela e registrando: '" + getTarefa() + "'.");
+        
+        System.out.println(">> " + getNome() + " finalizou o mapeamento seguro!");
     }
 
     @Override
     public void run() {
         exibirStatus();
         try {
-            executarTarefa();
-        } catch (TarefaInvalidaException e) {
-            System.err.println("Erro: " + e.getMessage());
+            System.out.println(getNome() + " aguardando permissão do semáforo...");
+            getSemaforo().acquire(); // Solicita vaga
+            
+            executarTarefa(); // Região Crítica
+            
+        } catch (InterruptedException e) {
+            System.err.println("Erro na execução da thread cuidadosa: " + e.getMessage());
+        } finally {
+            System.out.println("<< " + getNome() + " liberando vaga no semáforo.");
+            getSemaforo().release(); // Libera vaga
         }
     }
 }

@@ -1,41 +1,50 @@
 import java.util.ArrayList;
+import java.util.concurrent.Semaphore;
 
-public class CacaAoTesouroParalela { // Nome igual ao do arquivo
+public class CacaAoTesouroParalela {
     public static void main(String[] args) {
-        System.out.println("=== INICIANDO CAÇA AO TESOURO PARALELA ===");
+        System.out.println("=== INICIANDO MISSÃO COOPERATIVA: NÍVEL AVENTUREIRO ===");
         System.out.println();
 
-        // Lista dinâmica para gerenciar o ciclo de execução paralela
+        // 1. Instanciando o Semáforo limitador (Apenas 2 exploradores ativos simultaneamente)
+        Semaphore semaforoCompartilhado = new Semaphore(2);
+
+        // 2. Criando os 4 objetos de Tarefa imutáveis
+        Tarefa t1 = new Tarefa("Mapear Caverna", "Caverna dos Eco", 7);
+        Tarefa t2 = new Tarefa("Explorar Ruínas", "Ruínas Sagradas", 6);
+        Tarefa t3 = new Tarefa("Desarmar Armadilhas", "Templo Antigo", 8);
+        Tarefa t4 = new Tarefa("Coletar Artefato", "Altar de Eldoria", 5);
+
+        // 3. Criando exploradores vinculados às suas tarefas e ao semáforo
+        ExploradorRapido ex1 = new ExploradorRapido("Alice", 5, Thread.MAX_PRIORITY, t1, semaforoCompartilhado);
+        ExploradorRapido ex2 = new ExploradorRapido("Clara", 3, Thread.MAX_PRIORITY, t3, semaforoCompartilhado);
+        ExploradorCuidadoso ex3 = new ExploradorCuidadoso("Bob", 4, Thread.MIN_PRIORITY, t2, semaforoCompartilhado);
+        ExploradorCuidadoso ex4 = new ExploradorCuidadoso("Diego", 6, Thread.MIN_PRIORITY, t4, semaforoCompartilhado);
+
+        // ArrayList para gerenciar as threads em execução
         ArrayList<Thread> linhaDeExploracao = new ArrayList<>();
 
-        // Instanciando os exploradores conforme as regras do desafio
-        ExploradorRapido ex1 = new ExploradorRapido("Alice", Thread.MAX_PRIORITY, "Vasculhar a caverna");
-        ExploradorRapido ex2 = new ExploradorRapido("Clara", Thread.MAX_PRIORITY, ""); // Gerará exceção controlada
-        ExploradorCuidadoso ex3 = new ExploradorCuidadoso("Bob", Thread.MIN_PRIORITY, "Mapear a floresta");
-        ExploradorCuidadoso ex4 = new ExploradorCuidadoso("Diego", Thread.MIN_PRIORITY, "Analisar runas antigas");
+        Thread tr1 = new Thread(ex1);
+        Thread tr2 = new Thread(ex2);
+        Thread tr3 = new Thread(ex3);
+        Thread tr4 = new Thread(ex4);
 
-        // Construindo e encapsulando as instâncias em Workers do tipo Thread
-        Thread t1 = new Thread(ex1);
-        Thread t2 = new Thread(ex2);
-        Thread t3 = new Thread(ex3);
-        Thread t4 = new Thread(ex4);
+        // Configurando prioridades distintas
+        tr1.setPriority(Thread.MAX_PRIORITY);
+        tr2.setPriority(Thread.MAX_PRIORITY);
+        tr3.setPriority(Thread.MIN_PRIORITY);
+        tr4.setPriority(Thread.MIN_PRIORITY);
 
-        // Ajustando os níveis de prioridade do scheduler do Java
-        t1.setPriority(Thread.MAX_PRIORITY);
-        t2.setPriority(Thread.MAX_PRIORITY);
-        t3.setPriority(Thread.MIN_PRIORITY);
-        t4.setPriority(Thread.MIN_PRIORITY);
+        // Marcando uma das threads como daemon secundária
+        tr4.setDaemon(true);
 
-        // Configurando a thread do Diego como daemon (tarefa em segundo plano)
-        t4.setDaemon(true);
+        // Guardando na lista
+        linhaDeExploracao.add(tr1);
+        linhaDeExploracao.add(tr2);
+        linhaDeExploracao.add(tr3);
+        linhaDeExploracao.add(tr4);
 
-        // Armazenando na lista encadeada obrigatória
-        linhaDeExploracao.add(t1);
-        linhaDeExploracao.add(t2);
-        linhaDeExploracao.add(t3);
-        linhaDeExploracao.add(t4);
-
-        // Disparando a busca síncrona/concorrente na matriz da ilha misteriosa
+        // Inicializando todos os exploradores em paralelo
         for (Thread thread : linhaDeExploracao) {
             thread.start();
         }
