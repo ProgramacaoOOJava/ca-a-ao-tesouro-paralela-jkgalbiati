@@ -1,39 +1,40 @@
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.Callable;
 
-public abstract class Explorador {
+public abstract class Explorador implements Callable<Double> {
     private String nome;
     private String especialidade;
     private int nivel;
-    private int prioridade;
-    private Tarefa tarefa; // Agora aponta para o objeto imutável
-    private Semaphore semaforo; // Mecanismo de controle de concorrência
+    private int energia;
+    private Missao missao;
 
-    public Explorador(String nome, String especialidade, int nivel, int prioridade, Tarefa tarefa, Semaphore semaforo) {
+    public Explorador(String nome, String especialidade, int nivel, int energia, Missao missao) {
         this.nome = nome;
         this.especialidade = especialidade;
         this.nivel = nivel;
-        this.prioridade = prioridade;
-        this.tarefa = tarefa;
-        this.semaforo = semaforo;
+        this.energia = energia;
+        this.missao = missao;
     }
 
-    public abstract void executarTarefa();
+    public abstract Double executarMissao();
+
+    @Override
+    public Double call() throws Exception {
+        exibirStatus();
+        return executarMissao();
+    }
 
     public void exibirStatus() {
-        System.out.println("Nome: " + nome);
+        System.out.println("Explorador: " + nome);
         System.out.println("Especialidade: " + especialidade);
-        System.out.println("Nível: " + nivel);
-        System.out.println("Prioridade: " + prioridade);
-        if (tarefa != null) {
-            System.out.println("Tarefa: " + tarefa.getDescricao() + " (Dificuldade " + tarefa.getDificuldade() + ")");
+        if (missao != null) {
+            System.out.println("Missão: " + missao.getDescricao());
         }
-        System.out.println("Status: Iniciando exploração...");
-        System.out.println();
     }
 
-    // Getters seguros para as subclasses e gerenciador
+    // Getters
     public String getNome() { return nome; }
     public String getEspecialidade() { return especialidade; }
-    public Tarefa getTarefa() { return tarefa; }
-    public Semaphore getSemaforo() { return semaforo; }
+    public int getNivel() { return nivel; }
+    public int getEnergia() { return energia; }
+    public Missao getMissao() { return missao; }
 }

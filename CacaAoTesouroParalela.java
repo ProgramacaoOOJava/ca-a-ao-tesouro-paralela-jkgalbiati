@@ -1,52 +1,58 @@
 import java.util.ArrayList;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ForkJoinPool;
 
 public class CacaAoTesouroParalela {
     public static void main(String[] args) {
-        System.out.println("=== INICIANDO MISSÃO COOPERATIVA: NÍVEL AVENTUREIRO ===");
+        System.out.println("=== DESAFIO CAÇA AO TESOURO PARALELA: NÍVEL MESTRE ===");
         System.out.println();
 
-        // 1. Instanciando o Semáforo limitador (Apenas 2 exploradores ativos simultaneamente)
-        Semaphore semaforoCompartilhado = new Semaphore(2);
+        // Criando as Missões imutáveis
+        Missao m1 = new Missao("Mapear cavernas", "Gruta Profunda", 6);
+        Missao m2 = new Missao("Recuperar artefatos", "Templo Perdido", 8);
+        Missao m3 = new Missao("Investigar ruínas", "Cidades de Pedra", 5);
+        Missao m4 = new Missao("Decifrar glifos", "Altar Ancestral", 7);
 
-        // 2. Criando os 4 objetos de Tarefa imutáveis
-        Tarefa t1 = new Tarefa("Mapear Caverna", "Caverna dos Eco", 7);
-        Tarefa t2 = new Tarefa("Explorar Ruínas", "Ruínas Sagradas", 6);
-        Tarefa t3 = new Tarefa("Desarmar Armadilhas", "Templo Antigo", 8);
-        Tarefa t4 = new Tarefa("Coletar Artefato", "Altar de Eldoria", 5);
+        // Lista polimórfica de exploradores
+        ArrayList<Explorador> exploradores = new ArrayList<>();
+        exploradores.add(new Rastreador("Lina", 5, 40, m1));
+        exploradores.add(new Saqueador("Drogan", 6, 64, m2));
+        exploradores.add(new Rastreador("Arin", 4, 50, m3));
+        exploradores.add(new Saqueador("Kael", 5, 30, m4));
 
-        // 3. Criando exploradores vinculados às suas tarefas e ao semáforo
-        ExploradorRapido ex1 = new ExploradorRapido("Alice", 5, Thread.MAX_PRIORITY, t1, semaforoCompartilhado);
-        ExploradorRapido ex2 = new ExploradorRapido("Clara", 3, Thread.MAX_PRIORITY, t3, semaforoCompartilhado);
-        ExploradorCuidadoso ex3 = new ExploradorCuidadoso("Bob", 4, Thread.MIN_PRIORITY, t2, semaforoCompartilhado);
-        ExploradorCuidadoso ex4 = new ExploradorCuidadoso("Diego", 6, Thread.MIN_PRIORITY, t4, semaforoCompartilhado);
+        // Criando o Pool de Threads fixo em tamanho 2
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        ArrayList<Future<Double>> resultadosFuturos = new ArrayList<>();
 
-        // ArrayList para gerenciar as threads em execução
-        ArrayList<Thread> linhaDeExploracao = new ArrayList<>();
-
-        Thread tr1 = new Thread(ex1);
-        Thread tr2 = new Thread(ex2);
-        Thread tr3 = new Thread(ex3);
-        Thread tr4 = new Thread(ex4);
-
-        // Configurando prioridades distintas
-        tr1.setPriority(Thread.MAX_PRIORITY);
-        tr2.setPriority(Thread.MAX_PRIORITY);
-        tr3.setPriority(Thread.MIN_PRIORITY);
-        tr4.setPriority(Thread.MIN_PRIORITY);
-
-        // Marcando uma das threads como daemon secundária
-        tr4.setDaemon(true);
-
-        // Guardando na lista
-        linhaDeExploracao.add(tr1);
-        linhaDeExploracao.add(tr2);
-        linhaDeExploracao.add(tr3);
-        linhaDeExploracao.add(tr4);
-
-        // Inicializando todos os exploradores em paralelo
-        for (Thread thread : linhaDeExploracao) {
-            thread.start();
+        // Submetendo os Callables ao serviço concorrente
+        for (Explorador exp : exploradores) {
+            resultadosFuturos.add(executor.submit(exp));
         }
+
+        // Vetor para consolidar as notas posteriormente
+        Double[] pontosColetados = new Double[resultadosFuturos.size()];
+
+        try {
+            for (int i = 0; i < resultadosFuturos.size(); i++) {
+                // Bloqueia até que a thread termine e traz o resultado matemático
+                pontosColetados[i] = resultadosFuturos.get(i).get();
+            }
+        } catch (Exception e) {
+            System.err.println("Erro na coleta de resultados: " + e.getMessage());
+        } finally {
+            // Desligamento obrigatório do pool de threads
+            executor.shutdown();
+        }
+
+        // Consolidando os dados usando o ForkJoinPool paralelo escalável
+        ForkJoinPool poolForkJoin = new ForkJoinPool();
+        SomaPontos tarefaPrincipal = new SomaPontos(pontosColetados, 0, pontosColetados.length);
+        
+        double somaTotal = poolForkJoin.invoke(tarefaPrincipal);
+
+        System.out.println("----------------------------------------");
+        System.out.println("Soma total dos pontos: " + somaTotal);
     }
 }
