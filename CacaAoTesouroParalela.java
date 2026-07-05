@@ -1,46 +1,43 @@
 import java.util.ArrayList;
 
-/**
- * Classe principal que simula a Caça ao Tesouro Paralela.
- * Demonstra o uso de threads, prioridades, tipos (user e daemon) e exceções personalizadas
- * através de diferentes tipos de exploradores.
- */
-public class CacaAoTesouroParalela {
-    
+public class CacaAoTesouroParalela { // Nome igual ao do arquivo
     public static void main(String[] args) {
-        System.out.println("=== CAÇA AO TESOURO PARALELA ===");
-        System.out.println("Exploradores em ação: threads, prioridades e exceções em Java\n");
-        
-        // Lista para gerenciar as threads dos exploradores
-        
-        // Criando exploradores rápidos
-        
-        // Criando exploradores cuidadosos
-        
-        // Criando um explorador com tarefa inválida para demonstrar exceção
-        
-        // Encapsulando exploradores em threads
-        
-        // Configurando prioridades das threads
-        
-        // Configurando algumas threads como daemon (tarefas secundárias)
-        
-        // Adicionando threads à lista
-        
-        // Exibindo informações das threads antes da execução
-        System.out.println("\n=== INFORMAÇÕES DAS THREADS ===");
-        
-        
-        // Iniciando todas as threads
-        System.out.println("\n=== INICIANDO EXPLORAÇÃO ===");
-        
-        // Aguardando conclusão das threads não-daemon
-        System.out.println("\n=== AGUARDANDO CONCLUSÃO DOS EXPLORADORES ===");
-        
-        // Verificando estado final das threads
-        
-        System.out.println("\n=== CAÇA AO TESOURO PARALELA FINALIZADA ===");
-        System.out.println("Todos os exploradores principais completaram suas missões!");
+        System.out.println("=== INICIANDO CAÇA AO TESOURO PARALELA ===");
+        System.out.println();
+
+        // Lista dinâmica para gerenciar o ciclo de execução paralela
+        ArrayList<Thread> linhaDeExploracao = new ArrayList<>();
+
+        // Instanciando os exploradores conforme as regras do desafio
+        ExploradorRapido ex1 = new ExploradorRapido("Alice", Thread.MAX_PRIORITY, "Vasculhar a caverna");
+        ExploradorRapido ex2 = new ExploradorRapido("Clara", Thread.MAX_PRIORITY, ""); // Gerará exceção controlada
+        ExploradorCuidadoso ex3 = new ExploradorCuidadoso("Bob", Thread.MIN_PRIORITY, "Mapear a floresta");
+        ExploradorCuidadoso ex4 = new ExploradorCuidadoso("Diego", Thread.MIN_PRIORITY, "Analisar runas antigas");
+
+        // Construindo e encapsulando as instâncias em Workers do tipo Thread
+        Thread t1 = new Thread(ex1);
+        Thread t2 = new Thread(ex2);
+        Thread t3 = new Thread(ex3);
+        Thread t4 = new Thread(ex4);
+
+        // Ajustando os níveis de prioridade do scheduler do Java
+        t1.setPriority(Thread.MAX_PRIORITY);
+        t2.setPriority(Thread.MAX_PRIORITY);
+        t3.setPriority(Thread.MIN_PRIORITY);
+        t4.setPriority(Thread.MIN_PRIORITY);
+
+        // Configurando a thread do Diego como daemon (tarefa em segundo plano)
+        t4.setDaemon(true);
+
+        // Armazenando na lista encadeada obrigatória
+        linhaDeExploracao.add(t1);
+        linhaDeExploracao.add(t2);
+        linhaDeExploracao.add(t3);
+        linhaDeExploracao.add(t4);
+
+        // Disparando a busca síncrona/concorrente na matriz da ilha misteriosa
+        for (Thread thread : linhaDeExploracao) {
+            thread.start();
+        }
     }
 }
-
